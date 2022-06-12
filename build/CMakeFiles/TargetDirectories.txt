@@ -1,0 +1,4 @@
+/home/karl/Documents/geometry/build/CMakeFiles/convexhull.dir
+/home/karl/Documents/geometry/build/CMakeFiles/segmentintersection.dir
+/home/karl/Documents/geometry/build/CMakeFiles/edit_cache.dir
+/home/karl/Documents/geometry/build/CMakeFiles/rebuild_cache.dir

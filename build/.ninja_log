@@ -1,0 +1,11 @@
+# ninja log v5
+3	5598	1655048171166460800	CMakeFiles/segmentintersection.dir/segmentintersection/segmentintersection.cpp.o	5d5ca56bd56f784a
+2	5666	1655048171236460800	CMakeFiles/convexhull.dir/convexhull/convexhull.cpp.o	f6f46490a916db82
+5601	5723	1655048171306460800	segmentintersection	9a089d0275d24be4
+5667	5795	1655048171386460800	convexhull	72a448bf991f6aec
+33	7441	1655048200116460800	CMakeFiles/segmentintersection.dir/segmentintersection/segmentintersection.cpp.o	5d5ca56bd56f784a
+7441	7610	1655048200306460800	segmentintersection	9a089d0275d24be4
+33	7739	1655048200406460800	CMakeFiles/convexhull.dir/convexhull/convexhull.cpp.o	f6f46490a916db82
+7739	7941	1655048200636460800	convexhull	72a448bf991f6aec
+9	6339	1655048324336460800	CMakeFiles/convexhull.dir/convexhull/convexhull.cpp.o	f6f46490a916db82
+6339	6507	1655048324516460800	convexhull	72a448bf991f6aec

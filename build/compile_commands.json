@@ -1,0 +1,12 @@
+[
+{
+  "directory": "/home/karl/Documents/geometry/build",
+  "command": "/usr/bin/g++ -DCGAL_USE_GMPXX=1 -I/home/karl/Documents/geometry/geolib -isystem /home/karl/vcpkg/installed/x64-linux/include -g -frounding-math -pthread -o CMakeFiles/convexhull.dir/convexhull/convexhull.cpp.o -c /home/karl/Documents/geometry/convexhull/convexhull.cpp",
+  "file": "/home/karl/Documents/geometry/convexhull/convexhull.cpp"
+},
+{
+  "directory": "/home/karl/Documents/geometry/build",
+  "command": "/usr/bin/g++ -DCGAL_USE_GMPXX=1 -I/home/karl/Documents/geometry/geolib -isystem /home/karl/vcpkg/installed/x64-linux/include -g -frounding-math -pthread -o CMakeFiles/segmentintersection.dir/segmentintersection/segmentintersection.cpp.o -c /home/karl/Documents/geometry/segmentintersection/segmentintersection.cpp",
+  "file": "/home/karl/Documents/geometry/segmentintersection/segmentintersection.cpp"
+}
+]
