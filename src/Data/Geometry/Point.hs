@@ -17,3 +17,10 @@ instance Functor Point2D where
 instance Show a => Show (Point2D a) where 
     show (Point2D x y) = 
         mconcat [ "(", show x , ", ", show y, ")"]
+
+-- lexicographical ordering of points
+instance Ord a => Ord (Point2D a) where 
+    (Point2D x1 y1) `compare` (Point2D x2 y2) = case x1 `compare` x2 of
+      LT -> LT 
+      GT -> GT
+      EQ -> y1 `compare` y2
