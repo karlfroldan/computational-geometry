@@ -29,7 +29,6 @@ library
       Data.Geometry.Orientation
       Data.Geometry.Point
       Data.Geometry.Segment
-      Lib
   other-modules:
       Paths_geometry
   hs-source-dirs:
