@@ -5,9 +5,7 @@ import Data.Geometry.Orientation
 
 import Data.List (sort)
 
-import Debug.Trace (trace)
-
-grahamScan :: (Num a, Ord a, Show a) => [Point2D a] -> [Point2D a]
+grahamScan :: (Num a, Ord a) => [Point2D a] -> [Point2D a]
 grahamScan []     = []
 grahamScan [x]    = [x]
 grahamScan [x, y] = [x, y]
@@ -23,7 +21,7 @@ Assumptions:
 
 The current hull will always have at least 2 points in it.
 -}
-hull :: (Num a, Ord a, Show a) 
+hull :: (Num a, Ord a) 
           => [Point2D a] -- List of unmet points
           -> [Point2D a] -- Current hull
           -> [Point2D a]
@@ -40,9 +38,3 @@ hull _ _ = undefined
 
 makesRightTurn :: (Num a, Ord a) =>  Point2D a -> Point2D a -> Point2D a -> Bool 
 makesRightTurn p q r = orientation p q r == Clockwise
-
-showPoints :: Show a => a -> a -> a -> String 
-showPoints p q r = concat 
-    [ "p: ", show p
-    , ", q: ", show q
-    , ", r: ", show r ]
