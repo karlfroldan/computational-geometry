@@ -22,6 +22,7 @@ description:         Please see the README on GitHub at <https://github.com/gith
 dependencies:
 - base >= 4.7 && < 5
 - gloss >= 1.13.2.1 && < 1.15.0.0
+- containers >= 0.6 && < 0.7
 
 library:
   source-dirs: src
@@ -57,3 +58,5 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - geometry
+    - hspec >= 2.8 && < 2.11
+    - QuickCheck >= 2.13 && < 2.15
