@@ -1,4 +1,9 @@
-module Data.BinaryTree where
+module Data.BinaryTree 
+    ( BinTree (..)
+    , insert, insertWith, search, minView, maxView, delete, deleteMin, deleteMax
+    , fromList, fromListWith, toList, unionWith, union, showTree
+    , successor, predecessor, getPred, getNext, key, value
+    ) where
 
 import Data.Foldable (Foldable(foldl'))
 import Data.Set (Set)
@@ -121,6 +126,10 @@ union = unionWith id
 showTree :: (Show k, Show v) => BinTree k v -> IO ()
 showTree = showTree' 0
 
+-- TODO: I'm lazy. Do this.
+-- showTreeString :: (Show k, Show v) => BinTree k v -> String 
+-- showTreeString 
+
 showTree' :: (Show k, Show v) => Int -> BinTree k v -> IO ()
 showTree' i Leaf = putStr (replicate (i * 2) ' ' ++ "> LEAF\n")
 showTree' i (Node l k v r) = do
@@ -180,6 +189,13 @@ The successor of a binary tree is either one of the following:
 2. If the tree has no right subtree, then the successor would be the 
    first ancestor `k'` of `k` such that `k'` is not a right subtree.
 -}
+
+{-|
+Given a key `k` and a binary search tree `t`, the `successor` of `k` in `t`,
+denoted by `successor k t` would be the minimum element of all keys in `t` smaller than `k`.
+
+The `successor k t` is `Just (BinTree k v)` returning Nothing if there is no successor.
+-}
 successor :: Ord k => k -> BinTree k v -> Maybe (BinTree k v)
 successor k Leaf = Nothing
 successor k n    = case fst tree of 
@@ -195,6 +211,12 @@ successor k n    = case fst tree of
           successor' p@(t, RCrumb k v l : crumbs) = successor' (goUp p)
           successor' p@(t, LCrumb k v r : crumbs) = Just (goUp p)
 
+{-|
+Given a key `k` and a binary search tree `t`, the `predecessor` of `k` in `t`,
+denoted by `predecessor k t` would be the minimum element of all keys in `t` larger than `k`.
+
+The `predecessor k t` is `Just (BinTree k v)` returning Nothing if there is no predecessor.
+-}
 predecessor :: Ord k => k -> BinTree k v -> Maybe (BinTree k v)
 predecessor k Leaf = Nothing
 predecessor k n    = case fst tree of 
@@ -211,6 +233,11 @@ predecessor k n    = case fst tree of
           predecessor' p@(t, RCrumb k v l : crumbs) = Just (goUp p)
 
 
+{-|
+The `findTree` function is essentially the same as `search` except that it takes an Zipper
+and returns a Zipper. The first element in the Zipper tuple is the tree itself, essentially 
+what one would find when using the `search` function. The second element would be the nodes that we have passed by.
+-}
 findTree :: Ord k => k -> BinTreeZipper k v -> BinTreeZipper k v
 findTree k (Leaf, bs) = (Leaf, bs)
 findTree k p@(Node l k' v r, bs)
