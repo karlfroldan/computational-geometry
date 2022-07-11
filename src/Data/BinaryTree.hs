@@ -28,6 +28,13 @@ insertWith f k v n@(Node l k' v' r)
     | f k > f k' = Node l k' v' (insertWith f k v r)
     | otherwise  = n -- do nothing.
 
+search :: Ord k => k -> BinTree k v -> Maybe (BinTree k v)
+search k Leaf = Nothing
+search k n@(Node l k' v r)
+    | k < k' = search k l
+    | k > k' = search k r
+    | otherwise = Just n
+
 -- | The same insert function as `Data.Map`.
 insert :: Ord k => k -> v -> BinTree k v -> BinTree k v
 insert = insertWith id
@@ -121,7 +128,16 @@ showTree' i (Node l k v r) = do
     showTree' (i + 1) l
     showTree' (i + 1) r
 
+xs :: BinTree Integer Integer
 xs = fromList [(0, 1), (-1, 4), (8, 0), (-100, 40), (40, -50), (-50, 60), (60, 80), (45, 43), (21, 90)]
+
+value :: BinTree k v -> v
+value Leaf           = error "Data.BinaryTree cannot get value of a leaf. Make sure tree is nonempty"
+value (Node _ _ v _) = v
+
+key :: BinTree k v -> k 
+key Leaf           = error "Data.BinaryTree cannot get value of a leaf. Make sure tree is nonempty"
+key (Node _ k _ _) = k
 
 {-
 FUNCTIONS FOR TRAVERSING THE BINARY SEARCH TREE
@@ -129,15 +145,82 @@ FUNCTIONS FOR TRAVERSING THE BINARY SEARCH TREE
 These functions are important so that we can easily find the successor and predecessor of 
 nodes efficiently. Otherwise, we would have to convert the tree to a list every time which might
 not be efficient for large-enough trees.
+
+In the perfect world, I wouldn't have to change these scary functions 
+when I convert the binary tree to a Red Black Tree, algthough minimally.
 -}
 
-search :: Ord k => k -> BinTree k v -> Maybe (BinTree k v)
-search k Leaf = Nothing 
-search k n@(Node l k' v r)
-    | k < k' = search k l 
-    | k > k' = search k r 
-    | otherwise = Just n
+data Treecrumb k v = LCrumb k v (BinTree k v) | RCrumb k v (BinTree k v) deriving (Eq, Show)
 
-value :: BinTree k v -> v 
-value Leaf           = error "Data.BinaryTree cannot get value of a leaf. Make sure tree is nonempty"
-value (Node _ _ v _) = v
+type Breadcrumbs k v = [Treecrumb k v]
+type BinTreeZipper k v = (BinTree k v, Breadcrumbs k v)
+
+goLeft :: BinTreeZipper k v -> BinTreeZipper k v
+goLeft (Leaf, crumbs) = (Leaf, crumbs)
+goLeft (Node l k v r, crumbs) = (l, LCrumb k v r : crumbs)
+
+goRight :: BinTreeZipper k v -> BinTreeZipper k v
+goRight (Leaf, crumbs) = (Leaf, crumbs)
+goRight (Node l k v r, crumbs) = (r, RCrumb k v l : crumbs)
+
+goUp :: BinTreeZipper k v -> BinTreeZipper k v
+goUp (t, [])              = (t, [])
+goUp (t, LCrumb k v r:bs) = (Node t k v r, bs)
+goUp (t, RCrumb k v l:bs) = (Node l k v t, bs)
+
+isRCrumb :: Treecrumb k v -> Bool
+isRCrumb (RCrumb k v t) = True
+isRCrumb _              = False
+
+{-
+The successor of a binary tree is either one of the following:
+
+1. If the tree has a right subtree, then the successor would be the
+   minimum in the right subtree.
+2. If the tree has no right subtree, then the successor would be the 
+   first ancestor `k'` of `k` such that `k'` is not a right subtree.
+-}
+successor :: Ord k => k -> BinTree k v -> Maybe (BinTree k v)
+successor k Leaf = Nothing
+successor k n    = case fst tree of 
+    Leaf -> Nothing
+    Node l k' v Leaf -> uSucc 
+    Node l k' v r    -> Just (minView r)
+    where tree = findTree k (n, [])
+          uSucc = case successor' tree of 
+            Nothing -> Nothing 
+            Just (t, bs) -> Just t
+          successor' :: BinTreeZipper k v -> Maybe (BinTreeZipper k v)
+          successor' (t, []) = Nothing 
+          successor' p@(t, RCrumb k v l : crumbs) = successor' (goUp p)
+          successor' p@(t, LCrumb k v r : crumbs) = Just (goUp p)
+
+predecessor :: Ord k => k -> BinTree k v -> Maybe (BinTree k v)
+predecessor k Leaf = Nothing
+predecessor k n    = case fst tree of 
+    Leaf -> Nothing
+    Node Leaf k' v r -> uPred 
+    Node l k' v r    -> Just (maxView l)
+    where tree = findTree k (n, [])
+          uPred = case predecessor' tree of 
+            Nothing -> Nothing 
+            Just (t, bs) -> Just t
+          predecessor' :: BinTreeZipper k v -> Maybe (BinTreeZipper k v)
+          predecessor' (t, []) = Nothing 
+          predecessor' p@(t, LCrumb k v r : crumbs) = predecessor' (goUp p)
+          predecessor' p@(t, RCrumb k v l : crumbs) = Just (goUp p)
+
+
+findTree :: Ord k => k -> BinTreeZipper k v -> BinTreeZipper k v
+findTree k (Leaf, bs) = (Leaf, bs)
+findTree k p@(Node l k' v r, bs)
+    | k < k'    = findTree k  (goLeft p)
+    | k > k'    = findTree k (goRight p)
+    | otherwise = p
+
+{- SHORTCUT FUNCTIONS -}
+getPred :: Ord p => p -> BinTree p v -> BinTree p v
+getPred i ps = let Just q = predecessor i ps in q
+
+getNext :: Ord p => p -> BinTree p v -> BinTree p v
+getNext i ps = let Just q = successor i ps in q
