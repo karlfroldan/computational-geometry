@@ -2,7 +2,7 @@ module Data.BinaryTree
     ( BinTree (..)
     , insert, insertWith, search, minView, maxView, delete, deleteMin, deleteMax
     , fromList, fromListWith, toList, unionWith, union, showTree
-    , successor, predecessor, getPred, getNext, key, value
+    , successor, predecessor, getPred, getNext, key, value, insertWithUpdate
     ) where
 
 import Data.Foldable (Foldable(foldl'))
@@ -24,6 +24,15 @@ balanced binary search tree later on, perhaps a red-black tree.
 -}
 data Color = Black | Red deriving (Eq, Show)
 data BinTree k v = Leaf | Node (BinTree k v) k v (BinTree k v) deriving (Eq, Show)
+
+-- | Insert into the binary tree with key `k` but with `f` applied.
+-- Also, if the key exists, then update the value. Otherwise, insert as usual with the default value.
+insertWithUpdate :: Ord k => (k -> k) -> (v -> v -> v) -> k -> v -> BinTree k v -> BinTree k v
+insertWithUpdate f g k v Leaf = Node Leaf k v Leaf -- insert as usual.
+insertWithUpdate f g k v n@(Node l k' v' r)
+    | f k < f k' = Node (insertWithUpdate f g k v l) k' v' r 
+    | f k > f k' = Node l k' v' (insertWithUpdate f g k v r)
+    | otherwise  = Node l k' (g v v') r
 
 -- | Insert into the binary tree with key `k` but with `f` applied.
 insertWith :: Ord k => (k -> k) -> k -> v -> BinTree k v -> BinTree k v

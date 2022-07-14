@@ -1,4 +1,9 @@
 module Main where 
 
+import Test.Hspec
+
+import Test.Data.BinaryTree
+
 main :: IO ()
-main = putStrLn "Test not yet implemented"
+main = hspec $ do 
+    bintreeInsertionTests
