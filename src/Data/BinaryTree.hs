@@ -1,10 +1,10 @@
-module Data.BinaryTree 
-    ( BinTree (..)
-    , insert, insertWith, search, minView, maxView, delete, deleteMin, deleteMax
-    , fromList, fromListWith, toList, unionWith, union, showTree
-    , successor, predecessor, getPred, getNext, key, value, insertWithUpdate
-    , intersection, intersectionWith, difference, differenceWith 
-    ) where
+module Data.BinaryTree where
+    -- ( BinTree (..)
+    -- , insert, insertWith, search, minView, maxView, delete, deleteMin, deleteMax
+    -- , fromList, fromListWith, toList, unionWith, union, showTree
+    -- , successor, predecessor, getPred, getNext, key, value, insertWithUpdate
+    -- , intersection, intersectionWith, difference, differenceWith 
+    -- ) where
 
 import           Data.List     (intersect, (\\))
 import           Data.Foldable (Foldable(foldl'))
@@ -28,7 +28,7 @@ data BinTree k v = Leaf | Node (BinTree k v) k v (BinTree k v) deriving (Eq, Sho
 
 -- | Insert into the binary tree with key `k` but with `f` applied.
 -- Also, if the key exists, then update the value. Otherwise, insert as usual with the default value.
-insertWithUpdate :: Ord k => (k -> k) -> (v -> v -> v) -> k -> v -> BinTree k v -> BinTree k v
+insertWithUpdate :: Ord k1 => (k -> k1) -> (v -> v -> v) -> k -> v -> BinTree k v -> BinTree k v
 insertWithUpdate f g k v Leaf = Node Leaf k v Leaf -- insert as usual.
 insertWithUpdate f g k v n@(Node l k' v' r)
     | f k < f k' = Node (insertWithUpdate f g k v l) k' v' r 
@@ -36,19 +36,22 @@ insertWithUpdate f g k v n@(Node l k' v' r)
     | otherwise  = Node l k' (g v v') r
 
 -- | Insert into the binary tree with key `k` but with `f` applied.
-insertWith :: Ord k => (k -> k) -> k -> v -> BinTree k v -> BinTree k v
+insertWith :: Ord k1 => (k -> k1) -> k -> v -> BinTree k v -> BinTree k v
 insertWith f k v Leaf = Node Leaf k v Leaf
 insertWith f k v n@(Node l k' v' r)
     | f k < f k' = Node (insertWith f k v l) k' v' r
     | f k > f k' = Node l k' v' (insertWith f k v r)
     | otherwise  = n -- do nothing.
 
+searchWith :: Ord k1 => (k -> k1) -> k -> BinTree k v -> Maybe (BinTree k v)
+searchWith f k Leaf = Nothing 
+searchWith f k n@(Node l k' v r)
+    | f k < f k' = searchWith f k l 
+    | f k > f k' = searchWith f k r 
+    | otherwise  = Just n
+
 search :: Ord k => k -> BinTree k v -> Maybe (BinTree k v)
-search k Leaf = Nothing
-search k n@(Node l k' v r)
-    | k < k' = search k l
-    | k > k' = search k r
-    | otherwise = Just n
+search = searchWith id
 
 -- | The same insert function as `Data.Map`.
 insert :: Ord k => k -> v -> BinTree k v -> BinTree k v
@@ -100,7 +103,7 @@ snd3 (x, y, z) = y
 trd3 :: (a, b, c) -> c
 trd3 (x, y, z) = z
 
-fromListWith :: Ord k => (k -> k) -> [(k, v)] -> BinTree k v
+fromListWith :: Ord k1 => (k -> k1) -> [(k, v)] -> BinTree k v
 fromListWith f = foldl' (\acc (k, v) -> insertWith f k v acc) Leaf
 
 fromList :: Ord k => [(k, v)] -> BinTree k v
@@ -193,6 +196,36 @@ The successor of a binary tree is either one of the following:
    first ancestor `k'` of `k` such that `k'` is not a right subtree.
 -}
 
+successorWith :: Ord k1 => (k -> k1) -> k -> BinTree k v -> Maybe (BinTree k v)
+successorWith f k Leaf = Nothing
+successorWith f k n    = case fst tree of 
+    Leaf -> Nothing
+    Node l k' v Leaf -> uSucc 
+    Node l k' v r    -> Just (minView r)
+    where tree = findTreeWith f k (n, [])
+          uSucc = case successor' tree of 
+            Nothing -> Nothing 
+            Just (t, bs) -> Just t
+          successor' :: BinTreeZipper k v -> Maybe (BinTreeZipper k v)
+          successor' (t, []) = Nothing 
+          successor' p@(t, RCrumb k v l : crumbs) = successor' (goUp p)
+          successor' p@(t, LCrumb k v r : crumbs) = Just (goUp p)
+
+predecessorWith :: Ord k1 => (k -> k1) -> k -> BinTree k v -> Maybe (BinTree k v)
+predecessorWith f k Leaf = Nothing
+predecessorWith f k n    = case fst tree of 
+    Leaf -> Nothing
+    Node Leaf k' v r -> uPred 
+    Node l k' v r    -> Just (maxView l)
+    where tree = findTreeWith f k (n, [])
+          uPred = case predecessor' tree of 
+            Nothing -> Nothing 
+            Just (t, bs) -> Just t
+          predecessor' :: BinTreeZipper k v -> Maybe (BinTreeZipper k v)
+          predecessor' (t, []) = Nothing 
+          predecessor' p@(t, LCrumb k v r : crumbs) = predecessor' (goUp p)
+          predecessor' p@(t, RCrumb k v l : crumbs) = Just (goUp p)
+
 {-|
 Given a key `k` and a binary search tree `t`, the `successor` of `k` in `t`,
 denoted by `successor k t` would be the minimum element of all keys in `t` smaller than `k`.
@@ -241,12 +274,15 @@ The `findTree` function is essentially the same as `search` except that it takes
 and returns a Zipper. The first element in the Zipper tuple is the tree itself, essentially 
 what one would find when using the `search` function. The second element would be the nodes that we have passed by.
 -}
+findTreeWith :: Ord k1 => (k -> k1) -> k -> BinTreeZipper k v -> BinTreeZipper k v 
+findTreeWith f k (Leaf, bs) = (Leaf, bs)
+findTreeWith f k p@(Node l k' v r, bs)
+    | f k < f k' = findTreeWith f k (goLeft p)
+    | f k > f k' = findTreeWith f k (goRight p)
+    | otherwise  = p
+
 findTree :: Ord k => k -> BinTreeZipper k v -> BinTreeZipper k v
-findTree k (Leaf, bs) = (Leaf, bs)
-findTree k p@(Node l k' v r, bs)
-    | k < k'    = findTree k  (goLeft p)
-    | k > k'    = findTree k (goRight p)
-    | otherwise = p
+findTree = findTreeWith id
 
 {- SHORTCUT FUNCTIONS -}
 getPred :: Ord p => p -> BinTree p v -> BinTree p v
@@ -260,14 +296,14 @@ getNext i ps = let Just q = successor i ps in q
 SET OPERATIONS
 -}
 
-unionWith :: Ord k => (k -> k) -> BinTree k v -> BinTree k v -> BinTree k v
+unionWith :: Ord k1 => (k -> k1) -> BinTree k v -> BinTree k v -> BinTree k v
 unionWith _ tree Leaf = tree
 unionWith f tree (Node l k v r) = unionWith f (insertWith f k v tree) r
 
 union :: Ord k => BinTree k v -> BinTree k v -> BinTree k v
 union = unionWith id
 
-intersectionWith :: (Eq k, Eq v, Ord k) => (k -> k) -> BinTree k v -> BinTree k v -> BinTree k v
+intersectionWith :: (Eq k, Eq v, Ord k1) => (k -> k1) -> BinTree k v -> BinTree k v -> BinTree k v
 intersectionWith f lTree rTree = fromListWith f iList 
     where 
         lList = toList lTree 
@@ -277,7 +313,7 @@ intersectionWith f lTree rTree = fromListWith f iList
 intersection :: (Eq k, Eq v, Ord k) => BinTree k v -> BinTree k v -> BinTree k v
 intersection = intersectionWith id
 
-differenceWith :: (Eq k, Eq v, Ord k) => (k -> k) -> BinTree k v -> BinTree k v -> BinTree k v
+differenceWith :: (Eq k, Eq v, Ord k1) => (k -> k1) -> BinTree k v -> BinTree k v -> BinTree k v
 differenceWith f lTree rTree = fromListWith f iList 
     where 
         lList = toList lTree 
