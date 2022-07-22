@@ -31,7 +31,6 @@ library
       Data.Geometry.Orientation
       Data.Geometry.Point
       Data.Geometry.Segment
-      Data.TreeMap
   other-modules:
       Paths_geometry
   hs-source-dirs:

@@ -3,12 +3,13 @@ module Data.BinaryTree
     , insert, insertWith, search, minView, maxView, delete, deleteMin, deleteMax
     , fromList, fromListWith, toList, unionWith, union, showTree
     , successor, predecessor, getPred, getNext, key, value, insertWithUpdate
+    , intersection, intersectionWith, difference, differenceWith 
     ) where
 
-import Data.Foldable (Foldable(foldl'))
-import Data.Set (Set)
+import           Data.List     (intersect, (\\))
+import           Data.Foldable (Foldable(foldl'))
+import           Data.Set      (Set)
 import qualified Data.Set as S
-import Debug.Trace (trace)
 
 {-
 RATIONALE:
@@ -124,13 +125,6 @@ instance Ord k => Semigroup (BinTree k v) where
 instance Ord k => Monoid (BinTree k v) where
     mempty  = Leaf
     mappend = (<>)
-
-unionWith :: Ord k => (k -> k) -> BinTree k v -> BinTree k v -> BinTree k v
-unionWith _ tree Leaf = tree
-unionWith f tree (Node l k v r) = unionWith f (insertWith f k v tree) r
-
-union :: Ord k => BinTree k v -> BinTree k v -> BinTree k v
-union = unionWith id
 
 showTree :: (Show k, Show v) => BinTree k v -> IO ()
 showTree = showTree' 0
@@ -260,3 +254,35 @@ getPred i ps = let Just q = predecessor i ps in q
 
 getNext :: Ord p => p -> BinTree p v -> BinTree p v
 getNext i ps = let Just q = successor i ps in q
+
+
+{-
+SET OPERATIONS
+-}
+
+unionWith :: Ord k => (k -> k) -> BinTree k v -> BinTree k v -> BinTree k v
+unionWith _ tree Leaf = tree
+unionWith f tree (Node l k v r) = unionWith f (insertWith f k v tree) r
+
+union :: Ord k => BinTree k v -> BinTree k v -> BinTree k v
+union = unionWith id
+
+intersectionWith :: (Eq k, Eq v, Ord k) => (k -> k) -> BinTree k v -> BinTree k v -> BinTree k v
+intersectionWith f lTree rTree = fromListWith f iList 
+    where 
+        lList = toList lTree 
+        rList = toList rTree 
+        iList = lList `intersect` rList
+
+intersection :: (Eq k, Eq v, Ord k) => BinTree k v -> BinTree k v -> BinTree k v
+intersection = intersectionWith id
+
+differenceWith :: (Eq k, Eq v, Ord k) => (k -> k) -> BinTree k v -> BinTree k v -> BinTree k v
+differenceWith f lTree rTree = fromListWith f iList 
+    where 
+        lList = toList lTree 
+        rList = toList rTree 
+        iList = lList \\ rList
+
+difference :: (Eq k, Eq v, Ord k) => BinTree k v -> BinTree k v -> BinTree k v 
+difference = differenceWith id
